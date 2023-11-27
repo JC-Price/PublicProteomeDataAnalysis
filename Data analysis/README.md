@@ -22,6 +22,7 @@ To perform normalization based on the Aguilan et al. 2020. It includes the follo
 
 
 ********************************* IMPORTANT IF RUNNING RNA DATA ****************************************
+
 If running RNA data, the below softwares and modules are only required when you need to convert the gene ensembl
 ID to UniprotID:
 
@@ -31,7 +32,7 @@ Python modules: selenium, requests, bs4
 Please note the version of your chrome.exe and use the corresponding version of chromedriver.exe
 chromedriver.exe can be downloaded from https://googlechromelabs.github.io/chrome-for-testing/
 Once chromedriver.exe is downloaded, place it in the same folder as this script.
-********************************************************************************************************
+****************************************** END ******************************************************
 
 Useage:
 For proteome data:
