@@ -395,6 +395,33 @@ def plotVP(input_df, fileName=None):
     plt.savefig(f'{fileName}', format="svg", transparent=True, dpi=300)
 
 
+def get_significance(df):
+    
+
+
+    # Create your conditions
+    neg_significance = (df['Fold_change'] <= -FC) & (df[' -10*log10(BH)'] >= significance_cutoff)
+    pos_significance = (df['Fold_change'] >= FC) & (df[' -10*log10(BH)'] >= significance_cutoff)
+
+    # Check if 'Abundance' column exists before modifying it
+    if 'Abundance' not in df.columns:
+        df['Abundance'] = '--'
+
+    # Convert the "Abundance" column to object type if it's not already
+    df['Abundance'] = df['Abundance'].astype('object')
+
+    # Set values in the "Abundance" column based on conditions
+    df.loc[neg_significance, 'Abundance'] = 'Abundance ↓'
+    df.loc[pos_significance, 'Abundance'] = 'Abundance ↑'
+
+    # Set default value for rows that do not meet either condition
+    df['Abundance'].fillna('--', inplace=True)
+
+
+        
+    return df
+
+
 #-------------------------Below section is definitions of input options------------------------------------------
 
 parser = argparse.ArgumentParser(description='''This script is developd to make the work flow of autodock_vina more smooth
@@ -422,6 +449,8 @@ def main():
     # This is to deal with spaces in the file path
     if len(args.location) > 1:
         where_are_the_files = ' '.join(args.location)
+    else:
+        where_are_the_files = args.location[0]
     if '\\' in where_are_the_files:
             where_are_the_files = where_are_the_files.replace('\\', '/')  
     # NORMALIZATION AND STATS
@@ -462,7 +491,8 @@ def main():
             
             # Perform the Benjamini_Hochberg_pval correction
             corrected_df = performBH_correction(significant_df)
-            corrected_df.to_csv(f'{dataSet.rsplit("/",1)[0]}/PVFC/{filename}_{key}_PVFC.csv', sep=',')
+            corrected_df = get_significance(corrected_df)
+            corrected_df.to_csv(f'{dataSet.rsplit("/",1)[0]}/PVFC/{filename}_{key}_PVFC.csv', sep=',', encoding='utf-8-sig', index=False)
             
             if args.convert:
                 if args.RNA:
