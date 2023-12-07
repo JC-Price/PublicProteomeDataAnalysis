@@ -58,7 +58,11 @@ FC = np.log2(2)
 def mkdir(path):
     folderls = ['Normalized', 'Stats', 'PVFC', 'VP', 'Ontology_input']
     for folder in folderls:
-        os.makedirs(f'{path}/{folder}', exist_ok=True)
+        if not os.path.exists(f'{path}/{folder}'):
+            os.mkdir(f'{path}/{folder}')
+            print(f'[+] Folder: {path}/{folder} created!!!')
+        else:
+            print(f'[+] Folder: {path}/{folder} exists!!!')
 
 
 def wget_UniprotID(df):
@@ -397,8 +401,6 @@ def plotVP(input_df, fileName=None):
 
 def get_significance(df):
     
-
-
     # Create your conditions
     neg_significance = (df['Fold_change'] <= -FC) & (df[' -10*log10(BH)'] >= significance_cutoff)
     pos_significance = (df['Fold_change'] >= FC) & (df[' -10*log10(BH)'] >= significance_cutoff)
@@ -416,9 +418,7 @@ def get_significance(df):
 
     # Set default value for rows that do not meet either condition
     df['Abundance'].fillna('--', inplace=True)
-
-
-        
+     
     return df
 
 
@@ -428,7 +428,7 @@ parser = argparse.ArgumentParser(description='''This script is developd to make 
                                                  Some functions can only be run in PyMOL. ''')
 parser.add_argument('-l',
                     '--location',
-                    nargs=1,
+                    nargs='+',
                     type=str,
                     help='Path to csv data files')
 parser.add_argument('--RNA', 
@@ -445,18 +445,21 @@ args = parser.parse_args()
 
 def main():
     if not args.location:
-        raise ValueError('Please input a valid path, ex: C:/Desktop/')
+        raise ValueError('Please input a valid path, ex: C:/Users/Desktop/')
     # This is to deal with spaces in the file path
     if len(args.location) > 1:
         where_are_the_files = ' '.join(args.location)
     else:
         where_are_the_files = args.location[0]
     if '\\' in where_are_the_files:
-            where_are_the_files = where_are_the_files.replace('\\', '/')  
+            where_are_the_files = where_are_the_files.replace('\\', '/')
+
     # NORMALIZATION AND STATS
-    where_are_the_files = where_are_the_files.rsplit('/', 1)[0]
+    if where_are_the_files[-1] == '/':
+        where_are_the_files = where_are_the_files.rsplit('/', 1)[0]
+
     mkdir(where_are_the_files)
-    
+
     all_file_names = glob.glob(f'{where_are_the_files}/*.csv')
 
     for dataSet in all_file_names:
@@ -504,9 +507,9 @@ def main():
                     df_onto = get_UniprotID(corrected_df)
                 df_positive = df_onto[(df_onto['Fold_change'] >= FC) & (df_onto[' -10*log10(BH)'] >= significance_cutoff)] 
                 df_negative = df_onto[(df_onto['Fold_change'] <= -FC) & (df_onto[' -10*log10(BH)'] >= significance_cutoff)] 
-                df_onto.to_csv(f'{dataSet.rsplit("/",1)[0]}/Ontology_input/{filename}_{key}_bg.csv', sep=',')
-                df_positive.to_csv(f'{dataSet.rsplit("/",1)[0]}/Ontology_input/{filename}_{key}_pos.csv', sep=',')
-                df_negative.to_csv(f'{dataSet.rsplit("/",1)[0]}/Ontology_input/{filename}_{key}_neg.csv', sep=',')
+                df_onto.to_csv(f'{dataSet.rsplit("/",1)[0]}/Ontology_input/{filename}_{key}_bg.csv', sep=',', encoding='utf-8-sig', index=False)
+                df_positive.to_csv(f'{dataSet.rsplit("/",1)[0]}/Ontology_input/{filename}_{key}_pos.csv', sep=',', encoding='utf-8-sig', index=False)
+                df_negative.to_csv(f'{dataSet.rsplit("/",1)[0]}/Ontology_input/{filename}_{key}_neg.csv', sep=',', encoding='utf-8-sig', index=False)
             
             # plot volcano plots
             print(f'[+] Plotting volcano plot for {key}...')
